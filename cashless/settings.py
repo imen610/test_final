@@ -29,7 +29,7 @@ SECRET_KEY = 'django-insecure-rl3#=*kw8q1m&@f&g@vfc4u00$zib%1lx&e$#wfq)_=2qauu0p
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['https://mywallet2022.herokuapp.com/','127.0.0.1']
+ALLOWED_HOSTS = ['https://mywalletmedianet.herokuapp.com/','127.0.0.1']
 
 AUTH_USER_MODEL='authentication.User'
 
