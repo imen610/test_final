@@ -20,10 +20,10 @@ from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from rest_framework.generics import ListCreateAPIView, ListAPIView
 from django.contrib.auth import get_user_model
 from cashless.settings import SECRET_KEY
-from  .serializers import  BlockedProductSerializer, GroupSerializer, ListProductSerializer, PaymentNFCSerializer, ProductSerializer,RegisterSerializer, EmailVerificationSerializer,RestPasswordEmailRequestSerialiser , SetNewPasswordSerializer, ShopSerializer, UpdateProductStatusSerializer, UserSerializer, WalletSerializer, updateWalletStatusSerializer
+from  .serializers import  BlockedProductSerializer, GroupSerializer, ListProductSerializer, MyImageSerialiser, PaymentNFCSerializer, ProductSerializer,RegisterSerializer, EmailVerificationSerializer,RestPasswordEmailRequestSerialiser , SetNewPasswordSerializer, ShopSerializer, UpdateProductStatusSerializer, UserSerializer, WalletSerializer, updateWalletStatusSerializer
 from rest_framework.response import Response 
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import Blocked_Product, Payment, Transaction, TransactionShop, User, Shop, Wallet, group, list_product, product, shop_account
+from .models import Blocked_Product, MyImageModel, Payment, Transaction, TransactionShop, User, Shop, Wallet, group, list_product, product, shop_account
 from cashless.utils import Util
 from django.contrib.sites.shortcuts import get_current_site
 from django.urls import reverse
@@ -235,13 +235,16 @@ class RequestPasswordRestEmail(generics.GenericAPIView):
 
                 relativeLink=reverse('password-reset-confirm',kwargs={'uidb64':uidb64,'token':token})
                 absurl='http://'+ str(current_site)+str(relativeLink)
-                # absurl='http://192.168.43.61:8000/ reset_password/'+ str(current_site)+str(relativeLink)
+                # absurl='http://192.168.43.61:5000'
                
                 email_body='hello ,\n Use link below to reset  your password \n' + absurl
                 data={'email_body':email_body ,'to_email':user.email,'email_subject':'reset your password'}
     
                 Util.send_email(data)
-        return Response({'success':'we have sent you a link to reset your password'},status=status.HTTP_200_OK)
+                return Response({'success':'we have sent you a link to reset your password'},status=status.HTTP_200_OK)
+        return Response({'failed':'is not exist'},status=status.HTTP_404_NOT_FOUND)
+    
+    
 
 class PasswordTokenCheckAPI(generics.GenericAPIView):
     def get(self,request,uidb64,token):
@@ -265,10 +268,12 @@ class SetNewPasswordAPIView(generics.GenericAPIView):
         serializer.is_valid(raise_exception=True)
         return Response({'success': True,'message':'Password reset success'},status=status.HTTP_200_OK)
 
-class UserList(ListCreateAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-    #permission_classes = [IsAuthenticated]
+class UserList(views.APIView):
+    # permission_classes = [IsAuthenticated]
+    def get(self,request):
+        users = User.objects.all()
+        serializer= UserSerializer(users,many=True)
+        return Response(serializer.data,status = status.HTTP_200_OK)
 
 
 class UserDetail(RetrieveUpdateDestroyAPIView):
@@ -278,7 +283,7 @@ class UserDetail(RetrieveUpdateDestroyAPIView):
 class ShopDetail(RetrieveUpdateDestroyAPIView):
     queryset = Shop
     serializer_class = ShopSerializer
-   # permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
 
 
 
@@ -290,7 +295,7 @@ class ProductDetail(RetrieveUpdateDestroyAPIView):
     
 
 class ShopAPIView(views.APIView):
-    #permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
 
 
     
@@ -620,16 +625,16 @@ class TransactionsAdminDashListView(ListAPIView):
         my_trans.update(type='Inflow')
         serializer = serializers.TransactionHistorySerializer(account_transactions, many=True)
      
-        x = serializer.data[5]['timestamp'][8]
-        y =serializer.data[5]['timestamp'][9]
-        d = x +y
-        day =int(d)
-        print(type(day))
-        print(d)
-       # day = 
-        dic = dict()
-        dic.update({'day':day,'day2':day})
-        print(dic)
+    #     x = serializer.data[5]['timestamp'][8]
+    #     y =serializer.data[5]['timestamp'][9]
+    #     d = x +y
+    #     day =int(d)
+    #     print(type(day))
+    #     print(d)
+    #    # day = 
+    #     dic = dict()
+    #     dic.update({'day':day,'day2':day})
+    #     print(dic)
         return Response(serializer.data, status=status.HTTP_200_OK)
   
 class statistiqueWallets(ListAPIView):
@@ -654,11 +659,11 @@ class statistiqueWallets(ListAPIView):
        
         for user in h:           
             datem = datetime.datetime.strptime(str(user['created_at']), "%Y-%m-%dT%H:%M:%S.%fZ")  
-            print(datem,' ùùùùùùùùùùùùùùù')
+            # print(datem,' ùùùùùùùùùùùùùùù')
             my_date1 = datem # if date is 01/01/2018
             year, week_num, day_of_week = my_date1.isocalendar()
-            print("Week #" + str(week_num) + " of year " + str(year))
-            print(day_of_week)
+            # print("Week #" + str(week_num) + " of year " + str(year))
+            # print(day_of_week)
 
             
             key.append(datem.month)
@@ -674,7 +679,7 @@ class statistiqueWallets(ListAPIView):
             for i in value:
                 if datem.month not in l_unique:
                     l_unique.append(datem.month)
-        print(l_unique.sort())
+        # print(l_unique.sort())
         for elt in l_unique:
             x = key.count(elt)
             # print(x)
@@ -683,12 +688,12 @@ class statistiqueWallets(ListAPIView):
             d["count"] = x
             print(d)
             list.append(d.copy())
-        print(list)
+        # print(list)
        
         my_date = datetime.date.today() # if date is 01/01/2018
         year, week_num, day_of_week = my_date.isocalendar()
-        print("Week #" + str(week_num) + " of year " + str(year))
-        print(day_of_week)
+        # print("Week #" + str(week_num) + " of year " + str(year))
+        # print(day_of_week)
             # print(d)
         
             
@@ -1228,8 +1233,13 @@ class paymentNFC(APIView):
 
     def post(self, request):
         t = 0
+        l_vend = []
+        l_block = []
         listProd = list_product.objects.all().order_by('-timestamp')
         ser = ListProductSerializer(listProd, many = True)
+        print(ser.data[0]['product'])
+        for e in ser.data[0]['product']:
+            l_vend.append(e['name_product'])
         print(ser.data[0]['shop']['name_shop'])
         # for i in ser.data:
         #     print(i[0]['shop'])
@@ -1244,8 +1254,13 @@ class paymentNFC(APIView):
             user = User.objects.get(id = s.data['account'])
             serial = UserSerializer(user)
             print(serial.data['username'])
+            print(serial.data['prod_block'])
+            for elt in serial.data['prod_block']:
+                l_block.append(elt['name_product'])
+            
+                        
             print(request.user)
-            # print(sender_acct)
+            print(sender_acct)
             x = sender_acct.is_disabled
             # print(x)
             if(sender_acct.is_disabled == True):
@@ -1261,13 +1276,23 @@ class paymentNFC(APIView):
                     recv_account = Shop.objects.get(name_shop=ser.data[0]['shop']['name_shop'])
                     # print(recv_account)
                     wallet_instance = shop_account.objects.get(account=recv_account)
+                    print(l_vend)
+                    print(l_block)
+                    if(len(l_vend)!= 0 and len(l_block)!= 0 ):
+                        print(len(l_vend))
+                        for i in l_vend:
+                            for j in l_block:
+                                if i == j:
+                                   return Response({j:'blocked','alert': "check your blocked products"}, status=status.HTTP_406_NOT_ACCEPTABLE)
 
-                    if float(amount) > float(sender_acct.maxAmount):
-                        return Response({
-                            'alert': "You do not have enough funds to complete the transfer..."
-                        }, status=status.HTTP_406_NOT_ACCEPTABLE)
+                    elif float(amount) > float(sender_acct.maxAmount):
+                        return Response({'alert': "You do not have enough funds to complete the transfer..."}, status=status.HTTP_406_NOT_ACCEPTABLE)
+                    
 
                     else:
+                        print(x)
+                        return Response({"user":'sucess'}, status = status.HTTP_200_OK)
+                                
                         wallet_instance.balance = float(wallet_instance.balance) + float(amount)
                         wallet_instance.save()
 
@@ -1289,6 +1314,33 @@ class paymentNFC(APIView):
                     "alert": f"Account not found, please try again."
                 }, status=status.HTTP_404_NOT_FOUND)
 
+
+class AddblockedProductsAPIView(views.APIView):
+    def get(self,request,id):
+       blockprod = User.objects.get(id = id)
+       serializer = UserSerializer(blockprod)
+       return Response(serializer.data['prod_block'],status=status.HTTP_200_OK)
+
+    def post(self,request,id):
+        e = User.objects.get(id=id)
+        print(e, "hello")
+        print(request.data['id'])
+        l = request.data['id']
+        print(l)
+        e.prod_block.add(l)
+        return Response(status=status.HTTP_200_OK)
+class RemoveblockedProductsAPIView(views.APIView):
+
+    def post(self,request,id):
+        e = User.objects.get(id=id)
+        print(e, "hello")
+        print(request.data['id'])
+        l = request.data['id']
+        print(l)
+        e.prod_block.remove(l)
+        return Response(status=status.HTTP_200_OK)
+
+        
 
 
 class ListProductView(APIView):
@@ -1325,3 +1377,48 @@ class MaxAmountView(APIView):
             wal.maxAmount = request.data['maxAmount']
             wal.save()
             return Response(status=status.HTTP_200_OK)
+
+class Edit_image(APIView):
+    serializer_class = serializers.MyImageSerialiser
+    
+    def post(self,request,account):
+        serializer = MyImageSerialiser(data = request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors, status = 400)
+
+class TopProdcuts(APIView):
+    serializer_class = serializers.ListProductSerializer
+    queryset = list_product.objects.all()
+    # permission_classes = [IsAuthenticatd]
+    def get(self, request):
+        h=[]
+        l=[]
+        dic = dict()
+        products = list_product.objects.all()
+        serializer = ListProductSerializer(products, many = True)
+        k = serializer.data
+        for e in k :
+
+            print(e['product'])
+            for i in e['product']:
+                h.append(i['name_product'])
+            print("xxxxxxxxxxxxxxx")
+        print(h)
+
+        for x in h:
+            if x  not in l:
+                l.append(x)
+        for b in l:
+            dic[b] = h.count(b)
+
+
+        print(dic)
+        sortedDict = sorted(dic.items(), key=lambda x: x[1], reverse=True)
+        print(sortedDict)
+        return Response(sortedDict, status=status.HTTP_200_OK)
+
+
+
+

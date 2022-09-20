@@ -1,4 +1,4 @@
-from pyexpat import model
+from dataclasses import field
 import uuid
 from pkg_resources import require
 import requests
@@ -7,7 +7,7 @@ from asyncio.log import logger
 from http.client import OK
 
 from cashless import settings
-from .models import Blocked_Product, User, Shop, Wallet, group, list_product,product, shop_account
+from .models import Blocked_Product, MyImageModel, User, Shop, Wallet, group, list_product,product, shop_account
 from rest_framework import serializers 
 from django.contrib.auth import authenticate
 from django.contrib import auth
@@ -29,6 +29,16 @@ from django.utils.encoding import smart_str,force_str , smart_bytes ,DjangoUnico
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.db.models import Sum
 
+from drf_extra_fields.fields import Base64ImageField
+class MyImageSerialiser(serializers.ModelSerializer):
+    image = Base64ImageField
+    class Meta : 
+        model = MyImageModel
+        fields  = ('data', 'image')
+    def create(self, validated_data):
+        image = validated_data.pop('image')
+        data = validated_data.pop('data')
+        return MyImageModel.objects.create(data = data, image = image)
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -71,36 +81,6 @@ class RegisterSerializer(serializers.ModelSerializer):
 class VerifySerializer(serializers.Serializer):
     otp = serializers.CharField(max_length=60)
 
-
-# class RegisterSerializer(serializers.ModelSerializer):
-  
-#     class Meta:
-#         model= User
-#         fields=['email','username','password']
-
-#         extra_kwargs={
-#             'password':{'write_only':True}
-#         }
-
-
-#         def validate(self,attrs):
-#             email = attrs.get('email','')
-#             username = attrs.get('username','')
-
-#             if not username.isalnum():
-#                 raise serializers.ValidationError(
-#                     'the username should only contain alphanumeric characters'
-#                 )
-#             return attrs
-
-#         def create(self,validated_data):
-#             user = User.objects.create_user(**validated_data)
-#             # x=uuid.uuid4().int
-#             # print(x)
-
-#             # obj = Wallet(wallet_id=x, balance=0,account=user, is_disabled=False)
-#             # obj.save()
-#             # return user
 
         
 
@@ -196,8 +176,8 @@ class UserSerializer(serializers.ModelSerializer):
     """
     class Meta :
         model = User
-        fields = ['id','username','email','first_name','last_name','phone_number','image','address','membre','created_at','wallet_blocked','is_membre','is_admin']
-        depth = 1
+        fields = ['id','username','email','first_name','last_name','phone_number','image','address','membre','created_at','wallet_blocked','is_membre','is_admin','prod_block']
+        depth = 2
         
 
 
@@ -218,11 +198,7 @@ class ShopSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
        
 
-# products=models.ManyToManyField(product)
-#     name_shop=models.CharField(max_length=255,default = None,null =True)
-#     address_shop=models.CharField(max_length=255 , default = None,null =True)
-#     email_shop= models.CharField(max_length=255,default = None,null =True)
-#     image_shop
+
 
 
         shop = models.Shop.objects.create(

@@ -58,5 +58,9 @@ urlpatterns=[
     path("listProdPaied/<int:id>/", views.ListProductView.as_view(), name='ListProduct'),
     path("ListProductAll/", views.ListProductAllView.as_view(), name='ListProductAll'),
     path("MaxAmountView/<int:account>/", views.MaxAmountView.as_view(), name='MaxAmountView'),
-    # MaxAmountView
+    path('AddblockedProducts/<int:id>/',views.AddblockedProductsAPIView.as_view(),name='AddblockedProducts'),
+    path('RemoveblockedProducts/<int:id>/',views.RemoveblockedProductsAPIView.as_view(),name='RemoveblockedProducts'),
+    path('Edit_image/',views.Edit_image.as_view(),name='Edit_image'),
+    path('TopProdcuts/',views.TopProdcuts.as_view(),name='TopProdcuts'),
+# TopProdcuts
    ]

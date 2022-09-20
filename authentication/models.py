@@ -1,5 +1,6 @@
 import binascii
 from decimal import Decimal
+from distutils.command.upload import upload
 from email.policy import default
 from math import prod
 import os
@@ -63,7 +64,16 @@ class UserManager(BaseUserManager):
 
     #     return user
 
-    
+class MyImageModel(models.Model):
+    image = models.ImageField(upload_to = 'static/images')
+    data = models.CharField(max_length=255)
+
+class product(models.Model):
+    name_product = models.CharField(max_length=255,default = None,null =True)
+    price_product = models.FloatField(default = None,null =True)
+    image_product = models.ImageField(default = "ecommerce-default-product.png", blank=True)
+    def __str__(self):
+        return f"{self.name_product}"
 
 class User(AbstractBaseUser,PermissionsMixin):
     account_id = models.CharField(max_length=7, validators=[MinLengthValidator(7), MaxLengthValidator(7)], default=random.randint(1111111, 9999999))
@@ -86,6 +96,7 @@ class User(AbstractBaseUser,PermissionsMixin):
     verification_code = models.CharField(default=f"{random.randint(111111,999999)}", max_length=9)
     tax_id = models.CharField(max_length=60, null=True)
     wallet_blocked=models.BooleanField(default=False)
+    prod_block = models.ManyToManyField(product)
 
     
     
@@ -106,13 +117,6 @@ class User(AbstractBaseUser,PermissionsMixin):
 
 
 
-
-class product(models.Model):
-    name_product = models.CharField(max_length=255,default = None,null =True)
-    price_product = models.FloatField(default = None,null =True)
-    image_product = models.ImageField(default = "ecommerce-default-product.png", blank=True)
-    def __str__(self):
-        return f"{self.name_product}"
 
 class Shop(models.Model):
     products=models.ManyToManyField(product)
@@ -240,6 +244,7 @@ class group(models.Model):
     id_groupe = models.CharField(max_length=4, validators=[MinLengthValidator(4), MaxLengthValidator(4)], default=generate_groupe_id)
     is_superuser = models.BooleanField(default = False)
     is_member = models.BooleanField(default =False)
+
 
 
 
